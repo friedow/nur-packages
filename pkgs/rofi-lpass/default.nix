@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchFromGitHub, ... }:
+{ lib, stdenv, fetchFromGitHub, makeWrapper, rofi, lastpass-cli }:
 
 stdenv.mkDerivation rec {
   name = "rofi-lpass";
@@ -11,9 +11,23 @@ stdenv.mkDerivation rec {
     sha256 = "05hwn0f9grgzx33vv2i82l1l1y9drkj89wy5jm3bzwxacj7yvkpl";
   };
 
+  nativeBuildInputs = [ makeWrapper ];
+
+  dontBuild = true;
+
   installPhase = ''
     mkdir -p $out/bin
-    cp rofi-lpass $out/bin/rofi-lpass
+    cp -a rofi-lpass $out/bin/rofi-lpass
+  '';
+
+  wrapperPath = with lib; makeBinPath [
+    rofi
+    lastpass-cli
+  ];
+
+  fixupPhase = ''
+    patchShebangs $out/bin
+    wrapProgram $out/bin/rofi-lpass --prefix PATH : "${wrapperPath}"
   '';
 
   meta = with lib; {
